@@ -1,0 +1,32 @@
+name: Compile Arduino Nano firmware
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+      - name: Install Arduino AVR core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+      - name: Compile ArduinoSerialTester for Nano ATmega328P
+        run: |
+          mkdir -p build
+          arduino-cli compile --fqbn arduino:avr:nano:cpu=atmega328 --output-dir build src/ArduinoSerialTester
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArduinoSerialTester-Nano-ATmega328P
+          path: |
+            build/*.hex
+            build/*.elf
+          if-no-files-found: error
