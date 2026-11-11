@@ -4,7 +4,7 @@
 using uint8_t=std::uint8_t;
 using uint16_t=std::uint16_t;
 using uint32_t=std::uint32_t;
-constexpr uint8_t LOW=0, HIGH=1, OUTPUT=1;
+constexpr uint8_t LOW=0, HIGH=1, OUTPUT=1, MISO=12;
 #define F(x) x
 uint8_t highByte(uint16_t x);
 uint8_t lowByte(uint16_t x);
