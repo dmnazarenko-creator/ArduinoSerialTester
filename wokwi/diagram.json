@@ -1,0 +1,306 @@
+{
+  "version": 1,
+  "author": "ArduinoSerialTester",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "id": "nano",
+      "type": "wokwi-arduino-nano",
+      "top": 190,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "id": "sr595a",
+      "type": "wokwi-74hc595",
+      "top": 0,
+      "left": 380,
+      "attrs": {}
+    },
+    {
+      "id": "sr595b",
+      "type": "wokwi-74hc595",
+      "top": 0,
+      "left": 720,
+      "attrs": {}
+    },
+    {
+      "id": "sr165a",
+      "type": "wokwi-74hc165",
+      "top": 360,
+      "left": 380,
+      "attrs": {}
+    },
+    {
+      "id": "sr165b",
+      "type": "wokwi-74hc165",
+      "top": 360,
+      "left": 720,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [
+      "nano:13",
+      "sr595a:SHCP",
+      "orange",
+      []
+    ],
+    [
+      "nano:8",
+      "sr595a:STCP",
+      "purple",
+      []
+    ],
+    [
+      "nano:9",
+      "sr595a:MR",
+      "gray",
+      []
+    ],
+    [
+      "nano:10",
+      "sr595a:OE",
+      "yellow",
+      []
+    ],
+    [
+      "nano:5V",
+      "sr595a:VCC",
+      "red",
+      []
+    ],
+    [
+      "nano:GND.1",
+      "sr595a:GND",
+      "black",
+      []
+    ],
+    [
+      "nano:13",
+      "sr595b:SHCP",
+      "orange",
+      []
+    ],
+    [
+      "nano:8",
+      "sr595b:STCP",
+      "purple",
+      []
+    ],
+    [
+      "nano:9",
+      "sr595b:MR",
+      "gray",
+      []
+    ],
+    [
+      "nano:10",
+      "sr595b:OE",
+      "yellow",
+      []
+    ],
+    [
+      "nano:5V",
+      "sr595b:VCC",
+      "red",
+      []
+    ],
+    [
+      "nano:GND.1",
+      "sr595b:GND",
+      "black",
+      []
+    ],
+    [
+      "nano:13",
+      "sr165a:CP",
+      "orange",
+      []
+    ],
+    [
+      "nano:6",
+      "sr165a:CE",
+      "blue",
+      []
+    ],
+    [
+      "nano:7",
+      "sr165a:PL",
+      "purple",
+      []
+    ],
+    [
+      "nano:5V",
+      "sr165a:VCC",
+      "red",
+      []
+    ],
+    [
+      "nano:GND.1",
+      "sr165a:GND",
+      "black",
+      []
+    ],
+    [
+      "nano:13",
+      "sr165b:CP",
+      "orange",
+      []
+    ],
+    [
+      "nano:6",
+      "sr165b:CE",
+      "blue",
+      []
+    ],
+    [
+      "nano:7",
+      "sr165b:PL",
+      "purple",
+      []
+    ],
+    [
+      "nano:5V",
+      "sr165b:VCC",
+      "red",
+      []
+    ],
+    [
+      "nano:GND.1",
+      "sr165b:GND",
+      "black",
+      []
+    ],
+    [
+      "nano:11",
+      "sr595a:DS",
+      "green",
+      []
+    ],
+    [
+      "sr595a:Q7S",
+      "sr595b:DS",
+      "green",
+      []
+    ],
+    [
+      "sr165a:Q7",
+      "sr165b:DS",
+      "green",
+      []
+    ],
+    [
+      "sr165b:Q7",
+      "nano:12",
+      "green",
+      []
+    ],
+    [
+      "nano:GND.1",
+      "sr165a:DS",
+      "black",
+      []
+    ],
+    [
+      "sr595a:Q0",
+      "sr165a:D0",
+      "#16a34a",
+      []
+    ],
+    [
+      "sr595b:Q0",
+      "sr165b:D0",
+      "#0891b2",
+      []
+    ],
+    [
+      "sr595a:Q1",
+      "sr165a:D1",
+      "#16a34a",
+      []
+    ],
+    [
+      "sr595b:Q1",
+      "sr165b:D1",
+      "#0891b2",
+      []
+    ],
+    [
+      "sr595a:Q2",
+      "sr165a:D2",
+      "#16a34a",
+      []
+    ],
+    [
+      "sr595b:Q2",
+      "sr165b:D2",
+      "#0891b2",
+      []
+    ],
+    [
+      "sr595a:Q3",
+      "sr165a:D3",
+      "#16a34a",
+      []
+    ],
+    [
+      "sr595b:Q3",
+      "sr165b:D3",
+      "#0891b2",
+      []
+    ],
+    [
+      "sr595a:Q4",
+      "sr165a:D4",
+      "#16a34a",
+      []
+    ],
+    [
+      "sr595b:Q4",
+      "sr165b:D4",
+      "#0891b2",
+      []
+    ],
+    [
+      "sr595a:Q5",
+      "sr165a:D5",
+      "#16a34a",
+      []
+    ],
+    [
+      "sr595b:Q5",
+      "sr165b:D5",
+      "#0891b2",
+      []
+    ],
+    [
+      "sr595a:Q6",
+      "sr165a:D6",
+      "#16a34a",
+      []
+    ],
+    [
+      "sr595b:Q6",
+      "sr165b:D6",
+      "#0891b2",
+      []
+    ],
+    [
+      "sr595a:Q7",
+      "sr165a:D7",
+      "#16a34a",
+      []
+    ],
+    [
+      "sr595b:Q7",
+      "sr165b:D7",
+      "#0891b2",
+      []
+    ]
+  ],
+  "serialMonitor": {
+    "display": "always",
+    "newline": "lf"
+  }
+}
