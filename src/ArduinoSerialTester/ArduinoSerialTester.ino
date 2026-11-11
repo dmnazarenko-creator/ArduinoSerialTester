@@ -13,7 +13,7 @@ constexpr uint8_t OE_W = 10;  // 74HC595 /OE, pin 13, also AVR SS
 // 165 #1 Q7 (pin 9) -> 165 #2 DS (pin 10).
 // 165 #2 Q7 (pin 9) -> Nano D12; unused 165 #1 DS tied to GND.
 // The pin naming (#1/#2) follows the physical chain, not bit numbering.
-const SPISettings SPI_CONFIG(1000000UL, MSBFIRST, SPI_MODE2);
+const SPISettings SPI_CONFIG(1000000UL, MSBFIRST, SPI_MODE0);
 
 uint16_t exchange16(uint16_t outgoing) {
   SPI.beginTransaction(SPI_CONFIG);
