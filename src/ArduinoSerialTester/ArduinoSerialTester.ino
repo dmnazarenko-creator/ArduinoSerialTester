@@ -47,6 +47,47 @@ void printHex16(uint16_t v) {
   }
 }
 
+#ifdef WOKWI_LOOPBACK_TEST
+void runLoopbackTest() {
+  // The sampled input word is the PREVIOUS output word.
+  // Check alternating patterns, all-ones, all-zeros, and each individual bit.
+  const uint16_t patterns[] = {0xA55A, 0x5AA5, 0xFFFF, 0x0000};
+  uint16_t previous = 0;
+  for (uint8_t i = 0; i < 4; ++i) {
+    uint16_t received = exchange16(patterns[i]);
+    if (received != previous) {
+      Serial.print(F("WOKWI_LOOPBACK_FAIL pattern TX="));
+      printHex16(patterns[i]);
+      Serial.print(F(" expected="));
+      printHex16(previous);
+      Serial.print(F(" actual="));
+      printHex16(received);
+      Serial.println();
+      return;
+    }
+    previous = patterns[i];
+  }
+  for (uint8_t bit = 0; bit < 16; ++bit) {
+    uint16_t pattern = uint16_t(1U) << bit;
+    uint16_t received = exchange16(pattern);
+    if (received != previous) {
+      Serial.print(F("WOKWI_LOOPBACK_FAIL walking bit="));
+      Serial.println(bit);
+      return;
+    }
+    previous = pattern;
+    received = exchange16(0);
+    if (received != previous) {
+      Serial.print(F("WOKWI_LOOPBACK_FAIL readback bit="));
+      Serial.println(bit);
+      return;
+    }
+    previous = 0;
+  }
+  Serial.println(F("WOKWI_LOOPBACK_PASS"));
+}
+#endif
+
 void setup() {
   // Establish inactive levels before switching pins to outputs.
   digitalWrite(CE_R, HIGH);
@@ -75,6 +116,10 @@ void setup() {
   Serial.begin(115200);
   Serial.println(F("ArduinoSerialTester: 16-bit SPI ready"));
   Serial.println(F("Send HEX word (0000..FFFF) and Enter"));
+#ifdef WOKWI_LOOPBACK_TEST
+  delay(10); // allow simulated output propagation before starting test
+  runLoopbackTest();
+#endif
 }
 
 char buffer[7];
