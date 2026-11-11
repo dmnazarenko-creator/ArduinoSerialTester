@@ -1,0 +1,43 @@
+name: Wokwi hardware-in-the-loop simulation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  wokwi-loopback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+      - name: Install AVR core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+      - name: Compile firmware with self-test enabled
+        run: |
+          mkdir -p build/wokwi
+          arduino-cli compile --fqbn arduino:avr:nano:cpu=atmega328 \
+            --build-property compiler.cpp.extra_flags="-DWOKWI_LOOPBACK_TEST" \
+            --output-dir build/wokwi src/ArduinoSerialTester
+      - name: Simulate Arduino Nano with 2x595 and 2x165
+        uses: wokwi/wokwi-ci-action@v1
+        with:
+          token: ${{ secrets.WOKWI_CLI_TOKEN }}
+          path: /
+          diagram_file: wokwi/diagram.json
+          timeout: 30000
+          expect_text: WOKWI_LOOPBACK_PASS
+          fail_text: WOKWI_LOOPBACK_FAIL
+          serial_log_file: wokwi-serial.log
+      - name: Upload simulation log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wokwi-serial-log
+          path: wokwi-serial.log
+          if-no-files-found: ignore
