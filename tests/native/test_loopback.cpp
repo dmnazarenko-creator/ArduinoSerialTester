@@ -14,6 +14,7 @@ uint64_t clocks=0, captures=0, latches=0;
 uint8_t highByte(uint16_t x) {return uint8_t(x>>8);}
 uint8_t lowByte(uint16_t x) {return uint8_t(x);}
 void pinMode(uint8_t, uint8_t) {}
+int digitalRead(uint8_t pin) { if(pin!=12) throw std::runtime_error("unexpected input pin"); return (shift165>>15)&1; }
 void delayMicroseconds(unsigned long) {}
 void digitalWrite(uint8_t pin, uint8_t value) {
   uint8_t old=pinLevel[pin];
@@ -28,8 +29,8 @@ uint8_t FakeSPI::transfer(uint8_t tx) {
     if(pinLevel[6]!=LOW || pinLevel[7]!=HIGH)
       throw std::runtime_error("165 clock inhibited or /PL asserted");
     if(pinLevel[9]!=HIGH) throw std::runtime_error("595 reset asserted");
-    rx=uint8_t((rx<<1)|((shift165>>15)&1));
     shift165=uint16_t(shift165<<1);
+    rx=uint8_t((rx<<1)|((shift165>>15)&1));
     shift595=uint16_t((shift595<<1)|((tx>>bit)&1));
     ++clocks;
   }
