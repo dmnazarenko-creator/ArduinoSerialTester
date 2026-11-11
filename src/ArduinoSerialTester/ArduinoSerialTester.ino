@@ -13,7 +13,7 @@ constexpr uint8_t OE_W = 10;  // 74HC595 /OE, pin 13, also AVR SS
 // 165 #1 Q7 (pin 9) -> 165 #2 DS (pin 10).
 // 165 #2 Q7 (pin 9) -> Nano D12; unused 165 #1 DS tied to GND.
 // The pin naming (#1/#2) follows the physical chain, not bit numbering.
-const SPISettings SPI_CONFIG(1000000UL, MSBFIRST, SPI_MODE3);
+const SPISettings SPI_CONFIG(1000000UL, MSBFIRST, SPI_MODE0);
 
 uint16_t exchange16(uint16_t outgoing) {
   SPI.beginTransaction(SPI_CONFIG);
@@ -24,6 +24,10 @@ uint16_t exchange16(uint16_t outgoing) {
   digitalWrite(LOAD_R, HIGH);
   delayMicroseconds(1);
 
+  // The 165 shifts on the SCK rising edge; SPI MODE0 samples MISO
+  // on that same edge. Preserve the first pre-clock Q7 bit explicitly.
+  // The SPI receive bytes then contain input bits 14..0 followed by DS.
+  const uint8_t firstInputBit = (digitalRead(MISO) == HIGH) ? 1 : 0;
   digitalWrite(LOAD_W, LOW);
   digitalWrite(CE_R, LOW);
   // Full duplex: every SPI clock simultaneously writes MOSI and reads MISO.
@@ -36,7 +40,8 @@ uint16_t exchange16(uint16_t outgoing) {
   delayMicroseconds(1);
   digitalWrite(LOAD_W, LOW);
   SPI.endTransaction();
-  return (uint16_t(hi) << 8) | lo;
+  const uint16_t sampled = (uint16_t(hi) << 8) | lo;
+  return (uint16_t(firstInputBit) << 15) | (sampled >> 1);
 }
 
 void printHex16(uint16_t v) {
