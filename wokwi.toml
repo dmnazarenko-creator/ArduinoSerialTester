@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+firmware = "build/wokwi/ArduinoSerialTester.ino.hex"
+elf = "build/wokwi/ArduinoSerialTester.ino.elf"
