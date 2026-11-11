@@ -7,6 +7,17 @@ on:
   workflow_dispatch:
 
 jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Compile native loopback simulator
+        run: |
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror -pedantic \
+            -I tests/native/stubs tests/native/test_loopback.cpp -o /tmp/test_loopback
+      - name: Test all 65536 values, bit order, and SPI clocks
+        run: /tmp/test_loopback
   compile:
     runs-on: ubuntu-latest
     steps:
