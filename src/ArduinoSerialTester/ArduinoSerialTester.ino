@@ -9,6 +9,14 @@
 #error "TestMode must be '1' or '2'"
 #endif
 
+// Terminal display: 'H' = hexadecimal, 'B' = 16-bit binary.
+#ifndef DispMode
+#define DispMode 'B'
+#endif
+#if DispMode != 'H' && DispMode != 'B'
+#error "DispMode must be 'H' or 'B'"
+#endif
+
 // Nano ATmega328P: D13=SCK, D12=MISO, D11=MOSI.
 constexpr uint8_t CE_R = 6;   // 74HC165 /CE, pin 15
 constexpr uint8_t LOAD_R = 7; // 74HC165 /PL, pin 1
@@ -62,6 +70,21 @@ void printHex16(uint16_t v) {
     uint8_t n = (v >> shift) & 15;
     Serial.print(char(n < 10 ? '0' + n : 'A' + n - 10));
   }
+}
+
+void printBinary16(uint16_t value) {
+  // Always 16 digits: bit 15 on the left, bit 0 on the right.
+  for (int8_t bit = 15; bit >= 0; --bit) {
+    Serial.print((value & (uint16_t(1U) << bit)) ? '1' : '0');
+  }
+}
+
+void printDisplay16(uint16_t value) {
+#if DispMode == 'B'
+  printBinary16(value);
+#else
+  printHex16(value);
+#endif
 }
 
 bool runLoopbackTest() {
@@ -209,13 +232,13 @@ void loop() {
   Serial.print(F("N="));
   Serial.print(sampleCount);
   Serial.print(F(" TX="));
-  printHex16(tx);
+  printDisplay16(tx);
   Serial.print(F(" EXPECTED="));
-  printHex16(expected);
+  printDisplay16(expected);
   Serial.print(F(" RX="));
-  printHex16(rx);
+  printDisplay16(rx);
   Serial.print(F(" DIFF="));
-  printHex16(mismatch);
+  printDisplay16(mismatch);
   // Detailed bit indices and cumulative errors temporarily hidden.
   // Restore this block if detailed diagnostics are needed later.
   /*
