@@ -16,6 +16,7 @@ uint8_t lowByte(uint16_t x) {return uint8_t(x);}
 void pinMode(uint8_t, uint8_t) {}
 int digitalRead(uint8_t pin) { if(pin!=12) throw std::runtime_error("unexpected input pin"); return (shift165>>15)&1; }
 void delayMicroseconds(unsigned long) {}
+void delay(unsigned long) {}
 void digitalWrite(uint8_t pin, uint8_t value) {
   uint8_t old=pinLevel[pin];
   pinLevel[pin]=value;
@@ -53,6 +54,11 @@ void testWord(uint16_t tx,uint16_t previous) {
 int main() {
   setup();
   require(latched595==0,"595 outputs not zero at startup");
+#if TestMode == '2'
+  loop();
+  loop(); // two complete loopback cycles, including all 16 walking bits
+  require(latched595==0,"Looping test failed to finish with zero outputs");
+#endif
   uint16_t previous=0;
   for(uint16_t tx:{uint16_t(0xA55A),uint16_t(0x5AA5),uint16_t(0xFFFF),uint16_t(0),uint16_t(0)}) {
     testWord(tx,previous); previous=tx;
