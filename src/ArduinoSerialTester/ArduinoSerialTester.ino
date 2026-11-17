@@ -201,7 +201,10 @@ void loop() {
   const uint16_t mismatch = rx ^ expected;
   previousTx = tx;
   ++sampleCount;
-  if (mismatch) ++errorCount;
+  if (mismatch) {
+    ++errorCount;
+    Serial.println(F("MODE2_ERROR"));
+  }
 
   Serial.print(F("MODE2_SAMPLE="));
   Serial.print(sampleCount);
