@@ -47,3 +47,16 @@ Select the test algorithm in `src/ArduinoSerialTester/ArduinoSerialTester.ino`:
 
 Use `-DTestMode=50` as a compiler override for mode '2' (ASCII value of `'2'`).
 The firmware itself uses character constants `'1'` and `'2'`.
+
+## Terminal display format (`DispMode`)
+
+Default in the Arduino sketch: `#define DispMode 'B'`.
+Change to `#define DispMode 'H'` to restore the previous hexadecimal presentation.
+Both display modes preserve the same 16-bit SPI data, the 125 kHz SPI speed and the
+50 ms interval of `TestMode '2'`.
+
+- `DispMode 'H'`: `N=2 TX=0x5AA5 EXPECTED=0xA55A RX=0xA55A DIFF=0x0000`
+- `DispMode 'B'`: `N=2 TX=0101101010100101 EXPECTED=1010010101011010 RX=1010010101011010 DIFF=0000000000000000`
+
+Binary output is always 16 digits, from bit 15 (left) to bit 0 (right), including leading zeros.
+The separate `MODE2_ERROR`, `BITS`, and `ERRORS` terminal messages remain commented out.
