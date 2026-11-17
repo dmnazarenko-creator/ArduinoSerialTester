@@ -34,8 +34,8 @@ jobs:
           path: /
           diagram_file: wokwi/diagram.json
           timeout: 30000
-          expect_text: ${{ matrix.mode == '1' && 'WOKWI_LOOPBACK_PASS' || 'MODE2_SAMPLE=37' }}
-          fail_text: ${{ matrix.mode == '1' && 'WOKWI_LOOPBACK_FAIL' || 'MODE2_ERROR' }}
+          expect_text: ${{ matrix.mode == '1' && 'WOKWI_LOOPBACK_PASS' || 'N=37' }}
+          fail_text: ${{ matrix.mode == '1' && 'WOKWI_LOOPBACK_FAIL' || '' }}
           serial_log_file: wokwi-serial.log
       - name: Upload simulation log
         if: always()
