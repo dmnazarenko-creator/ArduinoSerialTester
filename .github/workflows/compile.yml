@@ -9,17 +9,23 @@ on:
 jobs:
   simulate:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: ['1', '2']
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
       - name: Compile native loopback simulator
         run: |
           g++ -std=c++17 -O2 -Wall -Wextra -Werror -pedantic \
-            -I tests/native/stubs tests/native/test_loopback.cpp -o /tmp/test_loopback
+            -DTestMode=\'${{ matrix.mode }}\' -I tests/native/stubs tests/native/test_loopback.cpp -o /tmp/test_loopback
       - name: Test all 65536 values, bit order, and SPI clocks
         run: /tmp/test_loopback
   compile:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: ['1', '2']
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -32,11 +38,13 @@ jobs:
       - name: Compile ArduinoSerialTester for Nano ATmega328P
         run: |
           mkdir -p build
-          arduino-cli compile --fqbn arduino:avr:nano:cpu=atmega328 --output-dir build src/ArduinoSerialTester
+          arduino-cli compile --fqbn arduino:avr:nano:cpu=atmega328 \
+            --build-property "compiler.cpp.extra_flags=-DTestMode='${{ matrix.mode }}'" \
+            --output-dir build src/ArduinoSerialTester
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
-          name: ArduinoSerialTester-Nano-ATmega328P
+          name: ArduinoSerialTester-Nano-ATmega328P-mode-${{ matrix.mode }}
           path: |
             build/*.hex
             build/*.elf
