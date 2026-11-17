@@ -2,7 +2,7 @@
 
 Arduino Nano (ATmega328P) firmware for 2 x 74HC595 (16 outputs) and 2 x 74HC165 (16 inputs).
 
-Hardware SPI transfers 16 bits simultaneously using D13/SCK, D11/MOSI, D12/MISO at 1 MHz (SPI mode 0, MSB first).
+Hardware SPI transfers 16 bits simultaneously using D13/SCK, D11/MOSI, D12/MISO (SPI mode 0, MSB first). TestMode '1' retains 1 MHz; TestMode '2' uses 125 kHz.
 
 ## Wiring
 
@@ -37,14 +37,13 @@ Select the test algorithm in `src/ArduinoSerialTester/ArduinoSerialTester.ino`:
 
 - **Mode '1' (default):** run one full loopback test in `setup()`. Afterwards the
   original serial HEX-command interface remains available in `loop()`.
-- **Mode '2':** continuously repeat the same alternating-pattern and 16 walking-bit
-  checks in `loop()`. Print `WOKWI_LOOPBACK_PASS` on each successful cycle and
-  `WOKWI_LOOPBACK_CYCLE_PASS=N` with the cycle count. A failed check
-  prints `WOKWI_LOOPBACK_FAIL` and stops the test.
+- **Mode '2':** one full-duplex 16-bit SPI transfer and one serial report **every 50 ms**, repeatedly, even when inputs disagree. A sweep uses four patterns (`A55A, 5AA5, FFFF, 0000`) followed by 16 walking-one patterns, each followed by zero (36 transfers total). The SPI clock is **125 kHz** for this mode only.
+  Every report includes `TX`, `EXPECTED` (previous TX, because 165 captures the previous 595 outputs), `RX`, `DIFF=EXPECTED XOR RX`, erroneous bit indices (`0..15`), and cumulative `ERRORS`. `MODE2_ERROR` is logged on mismatch without stopping SPI.
+  Example: `MODE2_SAMPLE=2 TX=0x5AA5 EXPECTED=0xA55A RX=0xA55A DIFF=0x0000 BITS=none ERRORS=0`.
 - Each test includes the previous-word readback latency of the 595/165 pipeline.
   The last 595 output is zero, so cycles start from the same defined state.
 - Both modes are compiled, native-tested, and simulated in Wokwi by GitHub Actions.
-  Wokwi checks completion of at least two cycles in mode '2'.
+  Wokwi checks at least 37 consecutive samples (one entire 36-step sweep plus restart) in mode '2'.
 
 Use `-DTestMode=50` as a compiler override for mode '2' (ASCII value of `'2'`).
 The firmware itself uses character constants `'1'` and `'2'`.
