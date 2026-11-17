@@ -92,6 +92,7 @@ int main() {
   loop();
   require(latched595==2,"Continuous walking-one did not advance");
   require(clocks==beforeError+48,"SPI did not continue after error");
+  exchange16(0); // reset output latch before the exhaustive standalone tests
 
 #endif
   uint16_t previous=0;
