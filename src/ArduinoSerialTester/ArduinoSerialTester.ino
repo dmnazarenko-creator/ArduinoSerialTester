@@ -131,12 +131,12 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println(F("ArduinoSerialTester: 16-bit SPI ready"));
-  Serial.println(F("Send HEX word (0000..FFFF) and Enter"));
   delay(10);
 #if TestMode == '1'
+  Serial.println(F("Send HEX word (0000..FFFF) and Enter"));
   runLoopbackTest(); // original one-shot algorithm
 #else
-  Serial.println(F("TestMode 2: continuous loopback"));
+  Serial.println(F("TestMode 2: continuous 16-bit SPI at 125 kHz, period 50 ms"));
 #endif
 }
 
