@@ -9,6 +9,7 @@
 FakeSerial Serial;
 FakeSPI SPI;
 bool corruptNextRead=false;
+uint32_t simulatedMs=0;
 uint8_t pinLevel[20] = {};
 uint16_t shift595=0, latched595=0, shift165=0;
 uint64_t clocks=0, captures=0, latches=0;
@@ -22,7 +23,8 @@ int digitalRead(uint8_t pin) {
   return value;
 }
 void delayMicroseconds(unsigned long) {}
-void delay(unsigned long) {}
+void delay(unsigned long ms) { simulatedMs += uint32_t(ms); }
+uint32_t millis() { return simulatedMs; }
 void digitalWrite(uint8_t pin, uint8_t value) {
   uint8_t old=pinLevel[pin];
   pinLevel[pin]=value;
@@ -61,16 +63,36 @@ int main() {
   setup();
   require(latched595==0,"595 outputs not zero at startup");
 #if TestMode == '2'
+  // A loop call before the first 50-ms boundary must produce no SPI clocks.
+  const uint64_t initialClocks=clocks;
   loop();
-  loop(); // two complete loopback cycles, including all 16 walking bits
-  require(latched595==0,"Looping test failed to finish with zero outputs");
+  require(clocks==initialClocks,"SPI fired before the first 50-ms interval");
+  simulatedMs=50;
+  const uint16_t patterns[]={0xA55A,0x5AA5,0xFFFF,0};
+  for(uint8_t i=0;i<4;++i) {
+    uint64_t before=clocks;
+    loop();
+    require(clocks==before+16,"Expected exactly one 16-bit exchange per period");
+    require(latched595==patterns[i],"Incorrect TX pattern in continuous mode");
+    loop();
+    require(clocks==before+16,"Duplicate SPI exchange within 50-ms period");
+    simulatedMs+=50;
+  }
+  // Force a single receive bit mismatch. Testing must continue afterward.
   corruptNextRead=true;
-  uint64_t beforeFailure=clocks;
-  loop(); // deliberately corrupt MISO: must report failure but keep clocking
-  require(clocks>=beforeFailure+32,"TestMode 2 stopped after a loopback failure");
-  require(latched595==0,"TestMode 2 did not reset 595 outputs after failure");
-  loop(); // verify normal test resumes after the injected fault
-  require(latched595==0,"TestMode 2 did not recover after transient read error");
+  uint64_t beforeError=clocks;
+  loop();
+  require(clocks==beforeError+16,"SPI was interrupted by injected RX fault");
+  require(latched595==1,"Walking-one sequence did not begin");
+  simulatedMs+=50;
+  loop();
+  require(clocks==beforeError+32,"SPI stopped following a mismatched input bit");
+  require(latched595==0,"Walking-bit zero reset missing");
+  simulatedMs+=50;
+  loop();
+  require(latched595==2,"Continuous walking-one did not advance");
+  require(clocks==beforeError+48,"SPI did not continue after error");
+
 #endif
   uint16_t previous=0;
   for(uint16_t tx:{uint16_t(0xA55A),uint16_t(0x5AA5),uint16_t(0xFFFF),uint16_t(0),uint16_t(0)}) {
