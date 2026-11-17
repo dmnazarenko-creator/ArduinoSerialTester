@@ -12,13 +12,14 @@ jobs:
     strategy:
       matrix:
         mode: ['1', '2']
+        display: ['H', 'B']
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
       - name: Compile native loopback simulator
         run: |
           g++ -std=c++17 -O2 -Wall -Wextra -Werror -pedantic \
-            -DTestMode=\'${{ matrix.mode }}\' -I tests/native/stubs tests/native/test_loopback.cpp -o /tmp/test_loopback
+            -DTestMode=\'${{ matrix.mode }}\' -DDispMode=\'${{ matrix.display }}\' -I tests/native/stubs tests/native/test_loopback.cpp -o /tmp/test_loopback
       - name: Test all 65536 values, bit order, and SPI clocks
         run: /tmp/test_loopback
   compile:
@@ -26,6 +27,7 @@ jobs:
     strategy:
       matrix:
         mode: ['1', '2']
+        display: ['H', 'B']
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -39,12 +41,12 @@ jobs:
         run: |
           mkdir -p build
           arduino-cli compile --fqbn arduino:avr:nano:cpu=atmega328 \
-            --build-property "compiler.cpp.extra_flags=-DTestMode=$((48 + ${{ matrix.mode }}))" \
+            --build-property "compiler.cpp.extra_flags=-DTestMode=$((48 + ${{ matrix.mode }})) -DDispMode=${{ matrix.display == 'B' && '66' || '72' }}" \
             --output-dir build src/ArduinoSerialTester
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
-          name: ArduinoSerialTester-Nano-ATmega328P-mode-${{ matrix.mode }}
+          name: ArduinoSerialTester-Nano-ATmega328P-mode-${{ matrix.mode }}-display-${{ matrix.display }}
           path: |
             build/*.hex
             build/*.elf
