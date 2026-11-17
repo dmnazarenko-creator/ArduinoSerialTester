@@ -1,6 +1,14 @@
 #include <Arduino.h>
 #include <SPI.h>
 
+// Compile-time selection: '1' = original single test; '2' = repeat forever.
+#ifndef TestMode
+#define TestMode '1'
+#endif
+#if TestMode != '1' && TestMode != '2'
+#error "TestMode must be '1' or '2'"
+#endif
+
 // Nano ATmega328P: D13=SCK, D12=MISO, D11=MOSI.
 constexpr uint8_t CE_R = 6;   // 74HC165 /CE, pin 15
 constexpr uint8_t LOAD_R = 7; // 74HC165 /PL, pin 1
@@ -52,8 +60,7 @@ void printHex16(uint16_t v) {
   }
 }
 
-#ifdef WOKWI_LOOPBACK_TEST
-void runLoopbackTest() {
+bool runLoopbackTest() {
   // The sampled input word is the PREVIOUS output word.
   // Check alternating patterns, all-ones, all-zeros, and each individual bit.
   const uint16_t patterns[] = {0xA55A, 0x5AA5, 0xFFFF, 0x0000};
@@ -68,7 +75,7 @@ void runLoopbackTest() {
       Serial.print(F(" actual="));
       printHex16(received);
       Serial.println();
-      return;
+      return false;
     }
     previous = patterns[i];
   }
@@ -78,20 +85,20 @@ void runLoopbackTest() {
     if (received != previous) {
       Serial.print(F("WOKWI_LOOPBACK_FAIL walking bit="));
       Serial.println(bit);
-      return;
+      return false;
     }
     previous = pattern;
     received = exchange16(0);
     if (received != previous) {
       Serial.print(F("WOKWI_LOOPBACK_FAIL readback bit="));
       Serial.println(bit);
-      return;
+      return false;
     }
     previous = 0;
   }
   Serial.println(F("WOKWI_LOOPBACK_PASS"));
+  return true;
 }
-#endif
 
 void setup() {
   // Establish inactive levels before switching pins to outputs.
@@ -121,9 +128,11 @@ void setup() {
   Serial.begin(115200);
   Serial.println(F("ArduinoSerialTester: 16-bit SPI ready"));
   Serial.println(F("Send HEX word (0000..FFFF) and Enter"));
-#ifdef WOKWI_LOOPBACK_TEST
-  delay(10); // allow simulated output propagation before starting test
-  runLoopbackTest();
+  delay(10);
+#if TestMode == '1'
+  runLoopbackTest(); // original one-shot algorithm
+#else
+  Serial.println(F("TestMode 2: continuous loopback"));
 #endif
 }
 
@@ -158,6 +167,16 @@ void handleCommand() {
   Serial.println();
 }
 void loop() {
+#if TestMode == '2'
+  static uint32_t cycles = 0;
+  if (!runLoopbackTest()) {
+    while (true) { delay(1000); } // fail-stop, keep evidence
+  }
+  ++cycles;
+  Serial.print(F("WOKWI_LOOPBACK_CYCLE_PASS="));
+  Serial.println(cycles);
+  delay(100);
+#else
   while (Serial.available()) {
     char c = char(Serial.read());
     if (c == '\n' || c == '\r') {
@@ -170,4 +189,5 @@ void loop() {
       Serial.println(F("ERR: command too long"));
     }
   }
+#endif
 }
