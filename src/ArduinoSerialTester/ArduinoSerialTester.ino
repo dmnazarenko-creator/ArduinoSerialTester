@@ -169,12 +169,23 @@ void handleCommand() {
 void loop() {
 #if TestMode == '2'
   static uint32_t cycles = 0;
-  if (!runLoopbackTest()) {
-    while (true) { delay(1000); } // fail-stop, keep evidence
-  }
+  static uint32_t errors = 0;
+  const bool passed = runLoopbackTest();
   ++cycles;
-  Serial.print(F("WOKWI_LOOPBACK_CYCLE_PASS="));
-  Serial.println(cycles);
+  if (passed) {
+    Serial.print(F("WOKWI_LOOPBACK_CYCLE_PASS="));
+    Serial.println(cycles);
+  } else {
+    ++errors;
+    Serial.print(F("WOKWI_LOOPBACK_CYCLE_FAIL="));
+    Serial.print(cycles);
+    Serial.print(F(" TOTAL_ERRORS="));
+    Serial.println(errors);
+    // The failed test may have left a nonzero output word latched.
+    // Restore zero for the next test, which expects previous TX == 0.
+    exchange16(0);
+  }
+  // Never stop SPI in TestMode '2', even if wiring is faulty.
   delay(100);
 #else
   while (Serial.available()) {
