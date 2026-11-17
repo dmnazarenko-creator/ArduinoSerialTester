@@ -12,12 +12,14 @@ void digitalWrite(uint8_t pin,uint8_t value);
 int digitalRead(uint8_t pin);
 void pinMode(uint8_t pin,uint8_t mode);
 void delayMicroseconds(unsigned long us);
+void delay(unsigned long ms);
 struct FakeSerial {
   void begin(unsigned long) {}
   void print(const char*) {}
   void print(char) {}
   void println() {}
   void println(const char*) {}
+  void println(uint32_t) {}
   int available(){return 0;}
   int read(){return -1;}
 };
