@@ -21,7 +21,11 @@ constexpr uint8_t OE_W = 10;  // 74HC595 /OE, pin 13, also AVR SS
 // 165 #1 Q7 (pin 9) -> 165 #2 DS (pin 10).
 // 165 #2 Q7 (pin 9) -> Nano D12; unused 165 #1 DS tied to GND.
 // The pin naming (#1/#2) follows the physical chain, not bit numbering.
+#if TestMode == '2'
+const SPISettings SPI_CONFIG(125000UL, MSBFIRST, SPI_MODE0);
+#else
 const SPISettings SPI_CONFIG(1000000UL, MSBFIRST, SPI_MODE0);
+#endif
 
 uint16_t exchange16(uint16_t outgoing) {
   SPI.beginTransaction(SPI_CONFIG);
@@ -168,25 +172,61 @@ void handleCommand() {
 }
 void loop() {
 #if TestMode == '2'
-  static uint32_t cycles = 0;
-  static uint32_t errors = 0;
-  const bool passed = runLoopbackTest();
-  ++cycles;
-  if (passed) {
-    Serial.print(F("WOKWI_LOOPBACK_CYCLE_PASS="));
-    Serial.println(cycles);
-  } else {
-    ++errors;
-    Serial.print(F("WOKWI_LOOPBACK_CYCLE_FAIL="));
-    Serial.print(cycles);
-    Serial.print(F(" TOTAL_ERRORS="));
-    Serial.println(errors);
-    // The failed test may have left a nonzero output word latched.
-    // Restore zero for the next test, which expects previous TX == 0.
-    exchange16(0);
+  // One 16-bit SPI transfer and one terminal report every 50 ms.
+  // The 165s capture the outputs of the PREVIOUS exchange.
+  static uint32_t lastPollMs = 0;
+  if ((uint32_t)(millis() - lastPollMs) < 50UL) return;
+  lastPollMs += 50UL;
+
+  static uint8_t patternIndex = 0;
+  static uint16_t previousTx = 0;
+  static uint32_t sampleCount = 0;
+  static uint32_t errorCount = 0;
+
+  // 4 fixed patterns, followed by walking-one bits interleaved with zero.
+  // 36 transfers per full pattern sweep, then repeat forever.
+  uint16_t tx;
+  if (patternIndex == 0) tx = 0xA55A;
+  else if (patternIndex == 1) tx = 0x5AA5;
+  else if (patternIndex == 2) tx = 0xFFFF;
+  else if (patternIndex == 3) tx = 0;
+  else {
+    const uint8_t offset = patternIndex - 4;
+    tx = (offset & 1) ? 0 : (uint16_t(1U) << (offset >> 1));
   }
-  // Never stop SPI in TestMode '2', even if wiring is faulty.
-  delay(100);
+  patternIndex = (patternIndex + 1) % 36;
+
+  const uint16_t rx = exchange16(tx);
+  const uint16_t expected = previousTx;
+  const uint16_t mismatch = rx ^ expected;
+  previousTx = tx;
+  ++sampleCount;
+  if (mismatch) ++errorCount;
+
+  Serial.print(F("MODE2_SAMPLE="));
+  Serial.print(sampleCount);
+  Serial.print(F(" TX="));
+  printHex16(tx);
+  Serial.print(F(" EXPECTED="));
+  printHex16(expected);
+  Serial.print(F(" RX="));
+  printHex16(rx);
+  Serial.print(F(" DIFF="));
+  printHex16(mismatch);
+  Serial.print(F(" BITS="));
+  if (!mismatch) {
+    Serial.print(F("none"));
+  } else {
+    for (uint8_t bit = 0; bit < 16; ++bit) {
+      if (mismatch & (uint16_t(1U) << bit)) {
+        Serial.print(uint32_t(bit));
+        Serial.print(' ');
+      }
+    }
+  }
+  Serial.print(F(" ERRORS="));
+  Serial.println(errorCount);
+
 #else
   while (Serial.available()) {
     char c = char(Serial.read());
