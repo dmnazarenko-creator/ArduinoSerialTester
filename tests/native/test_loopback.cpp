@@ -8,13 +8,19 @@
 
 FakeSerial Serial;
 FakeSPI SPI;
+bool corruptNextRead=false;
 uint8_t pinLevel[20] = {};
 uint16_t shift595=0, latched595=0, shift165=0;
 uint64_t clocks=0, captures=0, latches=0;
 uint8_t highByte(uint16_t x) {return uint8_t(x>>8);}
 uint8_t lowByte(uint16_t x) {return uint8_t(x);}
 void pinMode(uint8_t, uint8_t) {}
-int digitalRead(uint8_t pin) { if(pin!=12) throw std::runtime_error("unexpected input pin"); return (shift165>>15)&1; }
+int digitalRead(uint8_t pin) {
+  if(pin!=12) throw std::runtime_error("unexpected input pin");
+  int value=(shift165>>15)&1;
+  if(corruptNextRead) { corruptNextRead=false; value ^= 1; }
+  return value;
+}
 void delayMicroseconds(unsigned long) {}
 void delay(unsigned long) {}
 void digitalWrite(uint8_t pin, uint8_t value) {
@@ -58,6 +64,13 @@ int main() {
   loop();
   loop(); // two complete loopback cycles, including all 16 walking bits
   require(latched595==0,"Looping test failed to finish with zero outputs");
+  corruptNextRead=true;
+  uint64_t beforeFailure=clocks;
+  loop(); // deliberately corrupt MISO: must report failure but keep clocking
+  require(clocks>=beforeFailure+32,"TestMode 2 stopped after a loopback failure");
+  require(latched595==0,"TestMode 2 did not reset 595 outputs after failure");
+  loop(); // verify normal test resumes after the injected fault
+  require(latched595==0,"TestMode 2 did not recover after transient read error");
 #endif
   uint16_t previous=0;
   for(uint16_t tx:{uint16_t(0xA55A),uint16_t(0x5AA5),uint16_t(0xFFFF),uint16_t(0),uint16_t(0)}) {
