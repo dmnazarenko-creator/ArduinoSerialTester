@@ -24,3 +24,27 @@ Daisy-chain: 595 #1 pin 9 -> 595 #2 pin 14. 165 #1 pin 9 -> 165 #2 pin 10; 165 #
 Open Serial Monitor at **115200 baud**. Send `A55A` and newline. Firmware writes 0xA55A to the outputs and reads the 16 input bits over the same 16 SPI clocks, printing `TX=0xA55A RX=0x....`.
 
 Target board: classic 5 V Arduino Nano ATmega328P. Compilation and hardware verification are pending.
+
+## Compile-time test modes
+
+Select the test algorithm in `src/ArduinoSerialTester/ArduinoSerialTester.ino`:
+
+```cpp
+#define TestMode '1'  // existing one-shot loopback test
+// or:
+#define TestMode '2'  // repeat the same test forever
+```
+
+- **Mode '1' (default):** run one full loopback test in `setup()`. Afterwards the
+  original serial HEX-command interface remains available in `loop()`.
+- **Mode '2':** continuously repeat the same alternating-pattern and 16 walking-bit
+  checks in `loop()`. Print `WOKWI_LOOPBACK_PASS` on each successful cycle and
+  `WOKWI_LOOPBACK_CYCLE_PASS=N` with the cycle count. A failed check
+  prints `WOKWI_LOOPBACK_FAIL` and stops the test.
+- Each test includes the previous-word readback latency of the 595/165 pipeline.
+  The last 595 output is zero, so cycles start from the same defined state.
+- Both modes are compiled, native-tested, and simulated in Wokwi by GitHub Actions.
+  Wokwi checks completion of at least two cycles in mode '2'.
+
+Use `-DTestMode=50` as a compiler override for mode '2' (ASCII value of `'2'`).
+The firmware itself uses character constants `'1'` and `'2'`.
