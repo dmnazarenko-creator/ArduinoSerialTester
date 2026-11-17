@@ -3,7 +3,7 @@
 
 // Compile-time selection: '1' = original single test; '2' = repeat forever.
 #ifndef TestMode
-#define TestMode '1'
+#define TestMode '2'
 #endif
 #if TestMode != '1' && TestMode != '2'
 #error "TestMode must be '1' or '2'"
@@ -203,10 +203,10 @@ void loop() {
   ++sampleCount;
   if (mismatch) {
     ++errorCount;
-    Serial.println(F("MODE2_ERROR"));
+    // Serial.println(F("MODE2_ERROR")); // Temporarily disabled: keep each sample on one line
   }
 
-  Serial.print(F("MODE2_SAMPLE="));
+  Serial.print(F("N="));
   Serial.print(sampleCount);
   Serial.print(F(" TX="));
   printHex16(tx);
@@ -216,6 +216,9 @@ void loop() {
   printHex16(rx);
   Serial.print(F(" DIFF="));
   printHex16(mismatch);
+  // Detailed bit indices and cumulative errors temporarily hidden.
+  // Restore this block if detailed diagnostics are needed later.
+  /*
   Serial.print(F(" BITS="));
   if (!mismatch) {
     Serial.print(F("none"));
@@ -228,7 +231,10 @@ void loop() {
     }
   }
   Serial.print(F(" ERRORS="));
-  Serial.println(errorCount);
+  Serial.print(errorCount);
+
+  */
+  Serial.println();
 
 #else
   while (Serial.available()) {
